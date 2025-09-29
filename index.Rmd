@@ -1,12 +1,10 @@
 --- 
-title: "A rapid,desktop model for riparian assessment"
+title: "Buffer Relative Assessment Tool (BRAT)"
 author: "Rosamar Ayala Torres and S. Kyle McKay"
-date: "April 2024"
-output:
-  html_document: default
-  word_document: default
+date: "September 2025"
 description: The U.S. Army Engineer Research and Development Center (ERDC) has developed a simple model for assessing riparian ecosystems based on rapid desktop methods primarily related to buffer width. This report documents the development of this model and its use.
-github-repo: USACE-WRISES/Riparian.Tier0.Model
+github-repo: skmckay/BRAT
+runtime: shiny
 ---
 
 # Front Matter {-}
@@ -39,29 +37,8 @@ rm(list=ls(all=TRUE))
 ##########
 #Load all necessary R packages
 library(ecorest)
+library(shiny)
 ```
-
-# PROJECT TIMELINE AND DUTIES {-}
-
-Early July 2023. Meta-analysis underway.
-
-July 2023. Meta-analysis results complete. 
-
-August 1 - Draft of suitability curves (Kyle and Rosamar). 
-
-August 7-11, 2023. Set up ecorest and function (Darixa). 
-
-August 18. Draft introduction and justifications for each suitability curve (Rosamar and Kyle). 
-
-August 21 - September 4. Darixa and Rosamar work together to test models and conduct simple sensitivity analysis. Writing the model evaluation section. 
-
-September 6-21. Kyle and Rosamar work together on a sample model application.
-
-September 6. Ask Colton for help adding this model to the riparian webapp.
-
-September 21.  Target for a complete draft of model document.
-
-October. Submit the model for review with the Eco-PCX.
 
 
 # ABSTRACT
@@ -245,6 +222,64 @@ Show the model's inclusion in Colton and Sam's online calculator?
 #A screen capture of the online model.
 #{r, echo=FALSE, fig.cap="Figure 1. Engineering economics cash flow diagrams."}
 #knitr::include_graphics("ZZ_EngrEconCashFlow.png")
+```
+
+
+## Shiny App
+
+Insert embdded shiny app.
+
+```{r echo=FALSE}
+# Define UI
+ui <- fluidPage(
+  titlePanel("Simple Equation Calculator"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("num1", "Input 1:", value = 1),
+      numericInput("num2", "Input 2:", value = 2),
+      numericInput("num3", "Input 3:", value = 3),
+      numericInput("num4", "Input 4:", value = 4)
+    ),
+    
+    mainPanel(
+      h3("Calculated Output"),
+      verbatimTextOutput("result"),
+      plotOutput("barPlot")
+    )
+  )
+)
+
+# Define server logic
+server <- function(input, output) {
+  
+  # Reactive expression to calculate result
+  result <- reactive({
+    # Simple equation: weighted sum
+    0.5 * input$num1 + 1.5 * input$num2 + input$num3 - 0.75 * input$num4
+  })
+  
+  # Output the result
+  output$result <- renderText({
+    paste("Result:", round(result(), 2))
+  })
+  
+  # Output the plot
+  output$barPlot <- renderPlot({
+    values <- c(input$num1, input$num2, input$num3, input$num4)
+    weights <- c(0.5, 1.5, 1, -0.75)
+    contributions <- values * weights
+    
+    barplot(contributions,
+            names.arg = c("Input 1", "Input 2", "Input 3", "Input 4"),
+            col = "steelblue",
+            main = "Contribution of Each Input",
+            ylab = "Weighted Value")
+  })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server, options = list(height = 500))
 ```
 
 
