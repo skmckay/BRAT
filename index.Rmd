@@ -1,31 +1,19 @@
 --- 
 title: "Buffer Relative Assessment Tool (BRAT)"
 author: "Rosamar Ayala Torres and S. Kyle McKay"
-date: "September 2025"
-description: The U.S. Army Engineer Research and Development Center (ERDC) has developed a simple model for assessing riparian ecosystems based on rapid desktop methods primarily related to buffer width. This report documents the development of this model and its use.
+date: "October 2025"
+description: The U.S. Army Engineer Research and Development Center (ERDC) developed a simple model for assessing riparian ecosystems based on rapid desktop methods primarily related to buffer width. This report documents the development and use of this model.
 github-repo: skmckay/BRAT
 runtime: shiny
 ---
 
-# Front Matter {-}
-
 <span style="color: red;">DRAFT REPORT UNDERGOING REVIEW AND USACE CERTIFICATION</span>
-
-The final, reviewed report can be downloaded here as an ERDC Technical Note. (<span style="color: red;">ADD LINK LATER</span>)
 
 Points of Contact:
 
-Rosamar Ayala Torres  
-rosamar.ayala-torres at erdc.dren.mil  
-Environmental Laboratory  
-Vicksburg, MS 39180
+Rosamar Ayala Torres, Environmental Laboratory, Vicksburg, MS, rosamar.ayala-torres@erdc.dren.mil
 
-S. Kyle McKay, Ph.D., P.E.  
-kyle.mckay at usace.army.mil  
-Phone: 970-980-9747  
-Environmental Laboratory  
-New York, NY 10278
-
+S. Kyle McKay, Ph.D., P.E., Woolpert, Inc., New York, NY, kyle.mckay@woolpert.com
 
 ```{r, echo=FALSE, include=FALSE}
 #Markdown options
@@ -38,36 +26,69 @@ rm(list=ls(all=TRUE))
 #Load all necessary R packages
 library(ecorest)
 library(shiny)
+library(shinylive)
 ```
 
 
-# ABSTRACT
+# **Abstract**
 
 Insert later.
 
 
-# INTRODUCTION
+# **Introduction**
 
-Insert later.
+Riparian zones are transitional ecosystems between aquatic freshwaters (e.g., streams, lakes, and wetlands) and terrestrial, upland areas. These ecosystems provide an enormous array of physical and ecological functions such as attenuation of floods, filtration of pollution and accompanying water quality improvement, regulation of stream temperatures, and provision of habitat for aquatic and terrestrial organisms. Accordingly, riparian zones are a major focus of ecosystem management (Johnson et al. 2018) and environmental regulation (Wenger et al. 1999). 
+
+Riparian zones have been extensively studied through a variety of disciplinary and interdisciplinary lenses (e.g., taxa-specific habitat investigations and management-focused management guidelines, respectively). Many models and tools have been developed to inform riparian management ranging from mechanistic vegetative growth tools to habitat suitability models to multi-metric scoring systems (Wiest et al. 2023, **ADD PFC REPORT**). At the simplest level, riparian zone width has provided a useful proxy for estimating functional outcomes, and qualitative guidance has recommended specific width thresholds associated with specific ecological outcomes (Wenger et al. 1999, Fischer and Fischenich 2000a, Lind et al. 2019).
+
+This report documents development of a simple quantitative tool for assessing riparian zone quality based on rapidly applicable desktop analyses, the Buffer Relative Assessment Tool (BRAT). The model seeks to inform preliminary stream restoration planning when comparing the relative merits of multiple restoration sites (e.g., Site-A vs. Site-B) or divergent alternatives (e.g., large-scale levee setback vs. riparian planting of existing riparian areas). This report describes the goals of the model, the theory supporting model structure, numerical code executing the model, and model testing and evaluation. In doing so, this report provides documentation of the technical details, use, and relevant information for USACE model approval and certification, as presented in EC 1105-2-412 (USACE 2011).
 
 
-# CONCEPTUALIZATION
+# **Model Development Process**
 
-Insert description of the conceptual view of the system related to instream outcomes, habitat outcomes, and connectivity.
+The BRAT was developed as one of three riparian modeling tools spanning a wide range of uses and levels of effort (Table 1). The BRAT uses simple equations to estimate riparian quality based on desktop analysis of data easily accessible from aerial photography, commonly available geospatial data layers, or professional judgment. The Riparian Ecological Functions Index (REFI, Wiest et al. 2026) provides a rapid field assessment technique based on semi-quantitative scoring of multiple riparian functions. The Web Application for Riparian Models (WARM, Shaw et al. 2026) compiles regionally tailored models for quantifying ecological outcomes, which typically require more detailed monitoring. Collectively, these tools provide a continuum of levels of effort, which can inform USACE ecosystem restoration decisions ranging from preliminary project planning to feasibility-level design to long-term monitoring. 
+
+```{r echo=FALSE}
+#Create empty table
+Table01 <- as.data.frame(matrix(NA, nrow = 6, ncol = 4))
+colnames(Table01) <- c("Scoping Issue", "Buffer Relative Assessment Tool (BRAT)", "Riparian Ecological Functions Index (REFI)", "Web Application for Riparian Models (WARM)")
+
+#Specify rows of the table
+Table01[1,] <- c("Documentation", "Ayala Torres and McKay (this report), Ayala Torres et al. (2025)", "Wiest et al. (2026)", "Shaw and Wiest (2023), Shaw et al. (2026)")
+Table01[2,] <- c("Primary purpose", "Screen divergent actions", "Preliminary assessment of ecological benefits of restoration.", "Quantification of regionally specific riparian outcomes.")
+Table01[3,] <- c("Level of effort per site", "Minutes-hours", "Hours-days", "Days to weeks")  
+Table01[4,] <- c("Alignment with USACE Milestones", "Alternative Milestone Meeting (AMM)", "Tentatively Selected Plan (TSP)", "Tentatively Selected Plan (TSP), Feasibility-level design (Chief's Report), Long-term monitoring")
+Table01[5,] <- c("Spatial Extent", "Global", "National", "Regional")
+Table01[6,] <- c("Output Type", "0 to 1 index based on instream functions, habitat outcomes, and connectivity", "0 to 1 index based on instream functions, habitat outcomes, and connectivity", "0 to 1 index based on regionally specified model structures")
+
+#Send output table rows into a single matrix
+rownames(Table01) <- NULL
+knitr::kable(Table01, caption="Table 1. A continuum of riparian modeling tools developed to inform USACE Planning decisions.", align="c") 
+```
+
+The BRAT was developed primarily from the extensive body of peer-reviewed riparian studies and literature. In particular, large parts of the model were derived from a quantitative meta-analysis of riparian buffer performance (Ayala Torres et al. 2025), which were then augmented by other peer-reviewed resources (Fischer and Fischenich 2000b, **SWISS EDGE EFFECTS**). Although based in literature review, a common ecological modeling process of conceptualization, quantification, evaluation, application, and communication (Grant and Swannack 2008) guided development of BRAT and serves as the overarching structure for this report. 
 
 
-```{r, echo=FALSE, fig.cap="Figure 1. Conceptual model of instream stuff."}
+# **Conceptualization**
+
+In general, the BRAT seeks to capture the general condition of riverine riparian areas. BRAT is applied at the reach-scale and produces a 0 to 1 index of riparian quality, where 0 is no ecological value and 1 is optimal condition. Index-based models of this type are typically combined with a measure of habitat quantity (i.e., area in acres) to produce an overarching metric of so-called "habitat units". While many restoration analyses consider changes in condition through time, BRAT does not include temporal processes and represents a single snapshot in condition based solely on desktop inputs. The spatial scale of BRAT is the channel reach, as defined by the user. However, reaches should be defined similarly across sites to create a consistent frame of comparison, and users are cautioned against using reaches less than 500m to avoid false precision associated with BRAT's high-level estimation goals. 
+
+Ecological functions of riparian areas have been assessed relative to a diverse set of outcomes and functions (Johnson et al. 2018, Wiest et al. 2023, **PFC REPORT**). In the REFI framework, Wiest et al. (2026) assess riparian functional outcomes based on three primary categories: (1) effects of riparian function on instream processes such as water quality and geomorphology, (2) the importance of areas as habitat for aquatic and terrestrial organisms, and (3) the role of riparian zones as corridors for animal movement. BRAT adopts this general framework for assessing riparian functions as the overarching structure of the model (Figure 1).
+
+```{r, echo=FALSE, fig.cap="Figure 1. Conceptual model of BRAT."}
 knitr::include_graphics("ZZ_REFI_ConceptualModel_Instream.png")
 ```
 
 
-# QUANTIFICATION
+# **Quantification**
 
-Provide a brief background on the meta-analysis and its role in this project.  
+Model quantification involves formalizing a conceptual model into a set of mathematical relationships, model parameters, and numerical algorithms (Grant and Swannack 2008). As mentioned, the BRAT model structure centers on three main ecological functions of riparian zones (instream processes, habitat provision, and corridor functions), which are derived from the REFI model structure (Wiest et al. 2026). Each of the three modules is assessed independently as a 0-to-1 index of ecosystem condition. Overall riparian condition is computed as the average of the quality scores for each module, which assumes that each function can occur without the others and mirrors the structure of REFI. Each module is viewed as an equally important contribution to overall stream function, and no weighting of outcomes is applied. Therefore, ecosystem quality is calculated as follows:
 
-Describe the overarching three functional outcomes and present an equation for combining these functions.
+$BRAT = \frac{I_{ins} + I_{hab} + I_{con}}{3}$
 
-$REFI_{0} = \frac{instream + habitat + connectivity}{3}$
+Where $BRAT$ is an overarching index of riparian condition scaled from 0 to 1 and $I_{x}$ are indices of riparian condition relative to instream, habitat, and connectivity functions.
+
+The BRAT compiles existing metrics of riparian condition presented in peer-reviewed literature for each of these three functional categories. In particular, the instream and habitat functions are derived from equations presented in Ayala Torres et al. (2025), who conducted a global meta-analysis of riparian buffer performance relative to pollutant retention and biodiversity outcomes. The corridor functions are derived from **SWISS STUDY** and **SMURF** as proxy metrics for the capacity of organisms to move through riparian areas. The following sections briefly describe each of these functions, the underlying studies supporting them, and the assumed functional form of these indices within BRAT. This section also describes the execution of the model in the R statistical software language (R Core Team 2022) in both a readily adaptable functional form as well as an interactive web application.
 
 
 ## Instream Effects of Riparian Zones
@@ -78,7 +99,8 @@ Show suitability curves.
 
 Paragraph justifying suitability curve 1. Present equation of the suitability curve.
 
-$SI_{ins} = 44.706+8.194*ln(w_{avg})$
+$I_{ins} = 44.706+8.194*ln(w_{avg})$
+
 
 ## Riparian Zones as Unique and Important Habitats
 
@@ -88,7 +110,7 @@ Show suitability curves.
 
 Paragraph justifying suitability curve 1. Present equation of the suitability curve.
 
-$SI_{hab} = 0.667+20*ln(w_{avg})$
+$I_{hab} = 0.667+20*ln(w_{avg})$
 
 
 ## Riparian Zones as Corridors
@@ -99,11 +121,15 @@ Show suitability curves.
 
 Paragraph justifying suitability curve 1. Present equation of the suitability curve.
 
-$SI_{cor} = 1.0+10.0*ln(w_{min})$
+$x_{edge} = 1.0+10.0*ln(L_{edge})$
 
 Paragraph justifying suitability curve 2. Present equation of the suitability curve.
 
-$y = mx+b$
+$x_{cor} = 1.0+10.0*ln(w_{min})$
+
+Paragraph justifying combination of edge and minimum corridor width
+
+$I_{con} = \frac{x_{edge} + x_{cor}}{2}$
 
 
 ## Model Code
@@ -111,117 +137,34 @@ $y = mx+b$
 Insert general background on R and functions. Compile REFI0 as a function using ecorest. 
 
 ```{r, echo=TRUE}
-#Specify function for the simple riparian model (SRM)
+#Specify function for the Buffer Relative Assessment Tool (BRAT)
   #width.avg = average riparian buffer width for a reach defined in meters
   #width.min = minimum riparian buffer width for a reach defined in meters
+  #edge = WHATEVER THE EDGE MODEL REQUIRES
 
-SRM <- function(width.avg, width.min){
+BRAT <- function(width.avg, width.min){
   #Compute suitability relative to instream outcomes based on contaminant removal mean regression from Ayala et al. (2024)
-  SI.ins <- 44.706 + 8.194*log(width.avg)
-  SI.ins <- SI.ins / 100
+  Iins <- 44.706 + 8.194*log(width.avg)
+  Iins <- Iins / 100
 
   #Compute suitability relative to habitat outcomes based on biodiversity mean regression from Ayala et al. (2024)
-  SI.hab <- 0.667 + 0.044*log(width.avg)
-  #SI.hab <- SI.hab / 100
-  SI.hab <- SI.hab 
+  Ihab <- 0.667 + 0.044*log(width.avg)
+  Ihab <- Ihab / 100
 
-  #Compute suitability relative to corridor outcomes based on TBD
-  SI.cor <- 1.0 + 10.0*log(width.min)
-  SI.cor <- SI.cor / 100
-  
-  #Compute overal suitability metric as the average of the three suitability indices
-  SI.total <- mean(SI.ins, SI.hab, SI.cor)
+  #Compute suitability relative to connectivity outcomes based on TBD
+  Icon <- 1.0 + 20.0*log(width.min)
+  Icon <- Icon / 100
   
   #Send output as data frame
-  SRM.out <- data.frame(SI.ins, SI.hab, SI.cor, SI.total)
-  colnames(SRM.out) <- c("instream", "habitat", "corridor", "total")
-  row.names(SRM.out) <- NULL
-  SRM.out
+  #BRAT.out <- c(Iins, Ihab, Icon, mean(Iins, Ihab, Icon))
+  BRAT.out <- data.frame(Iins, Ihab, Icon, mean(Iins, Ihab, Icon))
+  colnames(BRAT.out) <- c("Iins", "Ihab", "Icon", "BRAT")
+  row.names(BRAT.out) <- NULL
+  BRAT.out
 }
 
 #Test function
-SRM(50,100)
-```
-
-Play around with plotting the suitability curves
-
-```{r}
-#Specify a set of input ranges to display suitability curves
-width.test <- seq(0,100,1)
-
-#Empty vectors to store results
-SIplot.ins <- c()
-SIplot.hab <- c()
-SIplot.cor <- c()
-for(i in 1:length(width.test)){
-  SIplot.ins[i] <- SRM(width.test[i],1)$instream
-  SIplot.hab[i] <- SRM(width.test[i],1)$habitat
-  SIplot.cor[i] <- SRM(1,width.test[i])$corridor
-}
-
-##########
-#Create multi-panel plot to display suitability curves
-par(mgp=c(2.5,0.5,0), mar=c(6, 4, 1, 1), #these control margins
-    mfrow=c(1,3), #Changes the number of panels (number of rows, number of columns) 
-    cex=1.0) #controls text size
-
-#Plot INSTREAM suitability
-plot(width.test, SIplot.ins, type="l", xlim=c(0,100), ylim=c(0,1), lwd=3,
-     xlab="Average Buffer Width (m)", ylab="Instream Suitability (Removal Efficiency)")
-
-#Plot HABITAT suitability
-plot(width.test, SIplot.hab, type="l", xlim=c(0,100), ylim=c(0,1), lwd=3,
-     xlab="Average Buffer Width (m)", ylab="Habitat Suitability (Species Richness)")
-
-#Plot CORRIDOR suitability 
-plot(width.test, SIplot.cor, type="l", xlim=c(0,100), ylim=c(0,1), lwd=3,
-     xlab="Minimum Buffer Width (m)", ylab="Corridor Suitability (Constraint)")
-
-```
-
-```{r}
-cbind(width.test, SIplot.ins, SIplot.hab)
-```
-
-
-```{r}
-0.667 + 0.044*log(8)
-
-0.471 + 0.057*log(8)
-```
-
-Old code that might be useful.
-
-
-```{r}
-#Create data frame for suitability curves
-#riparian0 <- data.frame(matrix(NA, nrow=5, ncol=8))
-#colnames(riparian0) <- c("Ins.Buffer.Width.Avg.m", "Index.Instream", "Bio.Buffer.Width.Avg.m", "Index.Biodiversity", "Buffer.Width.Min.m", "Index.Connectivity1", "Edge.Density", "Index.Connectivity2")
-
-#Specify suitability curves
-#riparian0$Ins.Buffer.Width.Avg.m <- c(0, 50, 100, 100, NA)
-#riparian0$Index.Instream <- c(0.0, 0.5, 0.9, 1.0, NA)
-#riparian0$Bio.Buffer.Width.Avg.m <- c(0, 10, 50, 500, 1000)
-#riparian0$Index.Biodiversity <- c(0.0, 0.2, 0.4, 0.9, 1.0)
-#riparian0$Buffer.Width.Min.m <- c(0, 100, 1000, NA, NA)
-#riparian0$Index.Connectivity1 <- c(0.0, 1.0, 1.0, NA, NA)
-#riparian0$Edge.Density <- c(0.00, 0.026, 0.046, 0.1, NA)
-#riparian0$Index.Connectivity2 <- c(1.0, 1.0, 0.0, 0.0, NA)
-
-#Create function here using ecorest.
-#library(ecorest)
-#input.riparian <- c(75, 75, 25, 0.03)
-#SIcalc(riparian0, input.riparian)
-
-```
-
-
-Show the model's inclusion in Colton and Sam's online calculator?
-
-```{r}
-#A screen capture of the online model.
-#{r, echo=FALSE, fig.cap="Figure 1. Engineering economics cash flow diagrams."}
-#knitr::include_graphics("ZZ_EngrEconCashFlow.png")
+BRAT(50,25)
 ```
 
 
@@ -232,18 +175,18 @@ Insert embdded shiny app.
 ```{r echo=FALSE}
 # Define UI
 ui <- fluidPage(
-  titlePanel("Simple Equation Calculator"),
+  titlePanel("Buffer Relative Assessment Tool (BRAT)"),
   
   sidebarLayout(
     sidebarPanel(
-      numericInput("num1", "Input 1:", value = 1),
-      numericInput("num2", "Input 2:", value = 2),
+      numericInput("num1", "Average Buffer Width (m):", value = 50),
+      numericInput("num2", "Minimum Buffer Width (m):", value = 25),
       numericInput("num3", "Input 3:", value = 3),
       numericInput("num4", "Input 4:", value = 4)
     ),
     
     mainPanel(
-      h3("Calculated Output"),
+      #h3("Calculated Output"),
       verbatimTextOutput("result"),
       plotOutput("barPlot")
     )
@@ -254,27 +197,25 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   # Reactive expression to calculate result
-  result <- reactive({
-    # Simple equation: weighted sum
-    0.5 * input$num1 + 1.5 * input$num2 + input$num3 - 0.75 * input$num4
-  })
+  result <- reactive(BRAT(input$num1, input$num2))
   
   # Output the result
   output$result <- renderText({
-    paste("Result:", round(result(), 2))
+    paste("BRAT =", round(result()[4], 2))
   })
   
   # Output the plot
   output$barPlot <- renderPlot({
-    values <- c(input$num1, input$num2, input$num3, input$num4)
-    weights <- c(0.5, 1.5, 1, -0.75)
-    contributions <- values * weights
+    #values <- c(input$num1, input$num2, input$num3, input$num4)
+    #values <- result
+    #weights <- c(0.5, 1.5, 1, -0.75)
+    #contributions <- values * weights
     
-    barplot(contributions,
-            names.arg = c("Input 1", "Input 2", "Input 3", "Input 4"),
+    barplot(c(result[1], result[2], result[3], result[4]),
+            names.arg = c("Iins", "Ihab", "Icon", "BRAT"),
             col = "steelblue",
-            main = "Contribution of Each Input",
-            ylab = "Weighted Value")
+            main = "",
+            ylab = "Riparian Condition (0-1 metric)")
   })
 }
 
@@ -283,7 +224,7 @@ shinyApp(ui = ui, server = server, options = list(height = 500))
 ```
 
 
-# MODEL EVALUATION
+# **Evaluation**
 
 Describe the basic battery of model evaluation relative to system quality, technical quality, and usability.
 
@@ -296,15 +237,15 @@ test.matrix <- data.frame(matrix(NA, nrow=0, ncol=5))
 colnames(test.matrix) <- c("Component", "Avg Width (m)", "Min Width (m)", "Expected", "SRM Output")
 
 #Specify test cases
-test.matrix[1,1:4] <- c("SIins", 0, 0, 0)
-test.matrix[2,1:4] <- c("SIins", 1000, 0, 1)
-test.matrix[3,1:4] <- c("SIhab", 0,1000,1)
-test.matrix[4,1:4] <- c("SIins", 0, 0, 0)
-test.matrix[5,1:4] <- c("SIins", 1000, 0, 1)
-test.matrix[6,1:4] <- c("SIhab", 0,1000,1)
-test.matrix[7,1:4] <- c("SIins", 0, 0, 0)
-test.matrix[8,1:4] <- c("SIins", 1000, 0, 1)
-test.matrix[9,1:4] <- c("SIhab", 0,1000,1)
+test.matrix[1,1:4] <- c("Iins", 0, 0, 0)
+test.matrix[2,1:4] <- c("Iins", 1000, 0, 1)
+test.matrix[3,1:4] <- c("Ihab", 0,1000,1)
+test.matrix[4,1:4] <- c("Iins", 0, 0, 0)
+test.matrix[5,1:4] <- c("Iins", 1000, 0, 1)
+test.matrix[6,1:4] <- c("Ihab", 0,1000,1)
+test.matrix[7,1:4] <- c("Iins", 0, 0, 0)
+test.matrix[8,1:4] <- c("Iins", 1000, 0, 1)
+test.matrix[9,1:4] <- c("Ihab", 0,1000,1)
 
 #Compute SRM output
 #test.matrix[1,5] <- SRM(test.matrix[1,1], test.matrix[1,2])$instream
@@ -315,32 +256,50 @@ test.matrix
 
 
 
-# MODEL APPLICATION
+# **Application & Communication**
 
 Present a simple example of model application in a riparian zone. Maybe Beargrass Creek or Utoy Creek?
 
 
-# SUMMARY
-
 Insert one paragraph summary.
 
 
-# ACKNOWLEDGEMENTS {-}
+# **Acknowledgements** {-}
 
 Model development was funded by the U.S. Army Corps of Engineers' Ecosystem Management and Restoration Research Program ([EMRRP](https://emrrp.el.erdc.dren.mil/)). The authors are grateful to Garrett Menichino, Sam Wiest, and Colton Shaw for their broader contributions to an EMRRP study of riparian ecological modeling and their roles in assisting with the web application. This model was reviewed by Kip Runyon, Mick Porter, Aubrey Harris, and others. Opinions expressed here are those of the authors and not necessarily those of the agencies they represent.
 
 
-# References {-}
+# **References** {-}
 
-Ayala Torres R., Dietterich L., Wiest S., and McKay S.K.  2024. Meta-analysis of riparian zone width effects on contaminant removal and biodiversity. Submitted to Ecological Applications. 
+**ADD PFC REPORT and SWISS EDGE EFFECTS REPORT and SMURF**
 
-Fischer, R. A., & Fischenich, J. C. (2000). Complexity Value as a Planning Tool Design Recommendations for Riparian Corridors and Vegetated Buffer Strips.
+Ayala Torres R., Dietterich L.H., Wiest S., and McKay S.K.  2025. Developing predictive models of riparian buffer efficacy with meta-analysis.  *Environmental Challenges*, 20, 101258, https://doi.org/10.1016/j.envc.2025.101258. 
 
-Gurevitch, J., Koricheva, J., Nakagawa, S., & Stewart, G. (2018). Meta-analysis and the science of research synthesis. Nature, 555(7695), 175–182. https://doi.org/10.1038/nature25753
+Fischer R.A. and Fischenich J.C. 2000a. Design recommendations for riparian corridors and vegetated buffer strips. *ERDC TN-EMRRP-SR-24*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi. 
 
-Lind, L., Hasselquist, E. M., & Laudon, H. (2019). Towards ecologically functional riparian zones: A meta-analysis to develop guidelines for protecting ecosystem functions and biodiversity in agricultural landscapes. In Journal of Environmental Management (Vol. 249). Academic Press. https://doi.org/10.1016/j.jenvman.2019.109391
+**Fischer R.A. and Fischenich J.C. 2000b. Complexity Value as a Planning Tool Design Recommendations for Riparian Corridors and Vegetated Buffer Strips. OUTLET. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.**
 
-Wenger, S. (1999). A review of the scientific literature on riparian buffer width , extent and vegetation. In Institute of Ecology, University of Georgia. https://www.soils.org/publications/sssaj/abstracts/73/6/2078
+Grant, W. E., and T. M. Swannack. 2008. Ecological Modeling: A Common-Sense Approach to Theory and Practice. Malden, MA: Blackwell Publishing.
 
-Zhang, X., Liu, X., Zhang, M., Dahlgren, R. A., & Eitzel, M. (2010). A Review of Vegetated Buffers and a Meta‐analysis of Their Mitigation Efficacy in Reducing Nonpoint Source Pollution. Journal of Environmental Quality, 39(1), 76–84. https://doi.org/10.2134/jeq2008.0496
+Gurevitch J., Koricheva J., Nakagawa S., and Stewart G. 2018. Meta-analysis and the science of research synthesis. *Nature*, 555(7695), 175–182. https://doi.org/10.1038/nature25753.
+
+Johnson R.R., Carothers S.W., Finch D.M., Kingsley K.J., and Stanley J.T. 2018. Riparian research and management: Past, present, future: Volume 1. *Gen. Tech. Rep. RMRS-GTR-377*. Rocky Mountain Research Station, Forest Service, US Department of Agriculture, Fort Collins, Colorado.
+
+Lind L., Hasselquist E.M., and Laudon H. 2019. Towards ecologically functional riparian zones: A meta-analysis to develop guidelines for protecting ecosystem functions and biodiversity in agricultural landscapes. *Journal of Environmental Management*, 249, https://doi.org/10.1016/j.jenvman.2019.109391. 
+
+McKay S.K., Richards N.S., and Swannack T.M. 2020. Ecological model evaluation: Testing system quality. *ERDC TN-EMRRP-EBA-26*. US Army Engineer Research and Development Center, Vicksburg, Mississippi. http://dx.doi.org/10.21079/11681/45380.
+
+R Core Team. 2022. R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. https://www.R-project.org/.
+
+Shaw C. and Wiest S. 2023. **INSERT TITLE**. Proceedings of the *2023 ASCE Inspire Conference*, American Society of Civil Engineers, Alexandria, Virginia.
+
+Shaw C., Wiest S., and McKay S.K. 2026. A web application for riparian models (WARM). *Forthcoming ERDC Technical Note*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
+
+Wenger S. 1999. A review of the scientific literature on riparian buffer width , extent and vegetation. Institute of Ecology, University of Georgia, https://www.soils.org/publications/sssaj/abstracts/73/6/2078.
+
+Wiest S., Hernandez-Abrams D., and McKay S.K. 2023. Review of riparian models for assessing ecological impacts and benefits. *ERDC/TN EMRRP-ER-26*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
+
+Wiest S., Menichino G.T., and McKay S.K. 2026. Riparian Ecological Functions Index (REFI). *Forthcoming ERDC Technical Report*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
+
+Zhang X., Liu X., Zhang M., Dahlgren R.A., and Eitzel M. 2010. A review of vegetated buffers and a meta‐analysis of their mitigation efficacy in reducing nonpoint source pollution. *Journal of Environmental Quality*, 39 (1), 76–84, https://doi.org/10.2134/jeq2008.0496. 
 
