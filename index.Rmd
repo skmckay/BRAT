@@ -1,6 +1,6 @@
 --- 
 title: "Buffer Relative Assessment Tool (BRAT)"
-author: "Rosamar Ayala Torres and S. Kyle McKay"
+author: "S. Kyle McKay and Rosamar Ayala Torres"
 date: "October 2025"
 description: The U.S. Army Engineer Research and Development Center (ERDC) developed a simple model for assessing riparian ecosystems based on rapid desktop methods primarily related to buffer width. This report documents the development and use of this model.
 github-repo: skmckay/BRAT
@@ -75,8 +75,8 @@ In general, the BRAT seeks to capture the general condition of riverine riparian
 
 Ecological functions of riparian areas have been assessed relative to a diverse set of outcomes and functions (Dickard et al 2015, Johnson et al. 2018, Wiest et al. 2023). In the REFI framework, Wiest et al. (2026) assess riparian functional outcomes based on three primary categories: (1) effects of riparian function on instream processes such as water quality and geomorphology, (2) the importance of areas as habitat for aquatic and terrestrial organisms, and (3) the role of riparian zones as corridors for animal movement. BRAT adopts this general framework for assessing riparian functions as the overarching structure of the model (Figure 1).
 
-```{r, echo=FALSE, fig.cap="Figure 1. Conceptual model of BRAT. THIS IS JUST A PLACEHOLDER UNTIL I MAKE A SEPARATE CONCEPTUAL MODEL."}
-knitr::include_graphics("ZZ_REFI_ConceptualModel_Instream.png")
+```{r, echo=FALSE, fig.cap="Figure 1. Conceptual model of BRAT."}
+knitr::include_graphics("ZZ_BRAT_ConceptualModel.png")
 ```
 
 
@@ -182,7 +182,7 @@ Show suitability curves.
 
 Paragraph justifying suitability curve 1. Present equation of the suitability curve.  
 
-Animal movement and behavior can be impacted by development outside of the riparian zone. For instance, many bird species are sensitive to edge effect. Kelly (2018) found that both the overall Shannon Wiener Diversity Index for birds and percent presence of insectivores decreased in Kentucky wetlands as disturbance increased. By assessing the spatial structure of the edge of the riparian zone, bird species’ sensitivity to disturbance can be taken into account. Edge density accounts for the relative proportion of edge length to interior habitat area. Rohde et al. (2005) report edge densi-ties for regulated, restored, and “near-natural” rivers in Switzerland. We adopted this methodology and assume that the average edge density for their “near-natural” sites (~850 m/ha or 0.026 ft/ft2) is a lower limit for the best possible habitat quality, and that suitability declines linearly as edge density increases. We then use their maximum observed edge density (~1,500 m/ha or 0.046 ft/ft2) as an upper limit for the lowest habitat suit-ability. 
+Animal movement and behavior can be impacted by development outside of the riparian zone. For instance, many bird species are sensitive to edge effect. Kelly (2018) found that both the overall Shannon Wiener Diversity Index for birds and percent presence of insectivores decreased in Kentucky wetlands as disturbance increased. By assessing the spatial structure of the edge of the riparian zone, bird species’ sensitivity to disturbance can be taken into account. Edge density accounts for the relative proportion of edge length to interior habitat area. Rohde et al. (2005) report edge densities for regulated, restored, and “near-natural” rivers in Switzerland. We adopted this methodology and assume that the average edge density for their “near-natural” sites (~850 m/ha or 0.026 ft/ft2) is a lower limit for the best possible habitat quality, and that suitability declines linearly as edge density increases. We then use their maximum observed edge density (~1,500 m/ha or 0.046 ft/ft2) as an upper limit for the lowest habitat suit-ability. 
 
 $$edge = \begin{pmatrix} 1.0 & \frac{L_{buffer}}{A_{edge}}<0.026\\
 2.3-50*\frac{L_{buffer}}{A_{edge}} & \frac{L_{buffer}}{A_{edge}}=0.026-0.046\\
@@ -215,45 +215,45 @@ Insert general background on R and functions. Compile REFI0 as a function using 
 
 ```{r, echo=TRUE}
 #Specify function for the Buffer Relative Assessment Tool (BRAT)
-  #width.avg = average riparian buffer width for a reach defined in meters
-  #width.min = minimum riparian buffer width for a reach defined in meters
-  #edge = WHATEVER THE EDGE MODEL REQUIRES
+  #width.avg.m = average riparian buffer width for a reach defined in meters
+  #width.min.m = minimum riparian buffer width for a reach defined in meters
+  #edge.density.perm = edge density defined as perimeter length divided by area in meters / square meters
 
-BRAT <- function(width.avg, width.min){
+BRAT <- function(width.avg.m, edge.density.perm, width.min.m){
   #Specify BRAT suitability curves
-  BRAT.SI <- data.frame(matrix(NA, nrow=4,ncol=8))
-  colnames(BRAT.SI) <- c("AvgBufferWidth1.m", "SI.ins", "AvgBufferWidth2.m", "SI.hab", "edge.perm", "SI.edge", "MinBufferWidth.m", "SI.cor")
-  BRAT.SI$AvgBufferWidth1.m <- c(0,10,50,100)
-  BRAT.SI$SI.ins <- c(0.0, 0.5, 0.8, 1.0)
-  BRAT.SI$AvgBufferWidth2.m <- c(0,10,50,100)
-  BRAT.SI$SI.hab <- c(0.0, 0.3, 0.7, 0.9)
-  BRAT.SI$edge.perm <- c(0,0.085,0.15,0.65)
-  BRAT.SI$SI.edge <- c(1.0, 1.0, 0.1, 0.1)
-  BRAT.SI$MinBufferWidth.m <- c(0,30, 300, NA)
-  BRAT.SI$SI.cor <- c(0.0, 1.0, 1.0, NA)
+    BRAT.SI <- data.frame(matrix(NA, nrow=4,ncol=8))
+    colnames(BRAT.SI) <- c("AvgBufferWidth1.m", "SI.ins", "AvgBufferWidth2.m", "SI.hab", "edge.perm", "SI.edge", "MinBufferWidth.m", "SI.cor")
+    BRAT.SI$AvgBufferWidth1.m <- c(0,10,50,100)
+    BRAT.SI$SI.ins <- c(0.0, 0.5, 0.8, 1.0)
+    BRAT.SI$AvgBufferWidth2.m <- c(0,10,50,100)
+    BRAT.SI$SI.hab <- c(0.0, 0.3, 0.7, 0.9)
+    BRAT.SI$edge.perm <- c(0,0.085,0.15,0.65)
+    BRAT.SI$SI.edge <- c(1.0, 1.0, 0.1, 0.1)
+    BRAT.SI$MinBufferWidth.m <- c(0,30, 300, NA)
+    BRAT.SI$SI.cor <- c(0.0, 1.0, 1.0, NA)
   
   #Compute suitability relative to instream outcomes based on contaminant removal mean regression from Ayala et al. (2024)
-  Iins <- 44.706 + 8.194*log(width.avg)
-  Iins <- Iins / 100
+  Iins <- SIcalc(BRAT.SI[,1:2], width.avg.m)
 
   #Compute suitability relative to habitat outcomes based on biodiversity mean regression from Ayala et al. (2024)
-  Ihab <- 0.667 + 0.044*log(width.avg)
-  Ihab <- Ihab / 100
+  Ihab <- SIcalc(BRAT.SI[,3:4], width.avg.m)
 
-  #Compute suitability relative to connectivity outcomes based on TBD
-  Icon <- 1.0 + 20.0*log(width.min)
-  Icon <- Icon / 100
+  #Compute suitability relative to edge effects based on Rohde et al. (2005)
+  Iedge <- SIcalc(BRAT.SI[,5:6], edge.density.perm)
+  
+  #Compute suitability relative to corridor confinement
+  Icor <- SIcalc(BRAT.SI[,7:8], width.min.m)
+  
+  #Compute suitability relative to corridor confinement
+  Icon <- (Iedge + Icor) / 2
   
   #Send output as data frame
-  #BRAT.out <- c(Iins, Ihab, Icon, mean(Iins, Ihab, Icon))
-  BRAT.out <- data.frame(Iins, Ihab, Icon, mean(Iins, Ihab, Icon))
-  colnames(BRAT.out) <- c("Iins", "Ihab", "Icon", "BRAT")
-  row.names(BRAT.out) <- NULL
+  BRAT.out <- c(Iins, Ihab, Icon, (Iins + Ihab + Icon)/3)
   BRAT.out
 }
 
 #Test function
-BRAT(50,25)
+BRAT(50,0.1,25)
 ```
 
 
@@ -262,53 +262,43 @@ BRAT(50,25)
 Insert embdded shiny app.
 
 ```{r echo=FALSE}
-# Define UI
+#Define UI
 ui <- fluidPage(
   titlePanel("Buffer Relative Assessment Tool (BRAT)"),
   
   sidebarLayout(
     sidebarPanel(
       numericInput("num1", "Average Buffer Width (m):", value = 50),
-      numericInput("num2", "Minimum Buffer Width (m):", value = 25),
-      numericInput("num3", "Input 3:", value = 3),
-      numericInput("num4", "Input 4:", value = 4)
+      numericInput("num2", "Edge Density (m/m2):", value = 0.1),
+      numericInput("num3", "Minimum Buffer Width (m):", value = 25)
     ),
     
     mainPanel(
-      #h3("Calculated Output"),
+      h3("BRAT outputs"),
       verbatimTextOutput("result"),
       plotOutput("barPlot")
     )
   )
 )
 
-# Define server logic
+#Define server logic
 server <- function(input, output) {
   
-  # Reactive expression to calculate result
-  result <- reactive(BRAT(input$num1, input$num2))
+  #Reactive expression to calculate result
+  result <- reactive(BRAT(input$num1, input$num2, input$num3))
   
-  # Output the result
-  output$result <- renderText({
-    paste("BRAT =", round(result()[4], 2))
-  })
+  #Output the result
+  output$result <- renderText({paste(c("Iins=", "Ihab=", "Icon=","BRAT="), round(result(), 2), sep="")})
   
-  # Output the plot
+  #Output the plot
   output$barPlot <- renderPlot({
-    #values <- c(input$num1, input$num2, input$num3, input$num4)
-    #values <- result
-    #weights <- c(0.5, 1.5, 1, -0.75)
-    #contributions <- values * weights
-    
-    barplot(c(result[1], result[2], result[3], result[4]),
-            names.arg = c("Iins", "Ihab", "Icon", "BRAT"),
-            col = "steelblue",
-            main = "",
-            ylab = "Riparian Condition (0-1 metric)")
+    barplot(result(), names.arg = c("Iins", "Ihab", "Icon", "BRAT"),
+            col = "steelblue", ylim=c(0,1),
+            ylab = "Riparian Condition (0-1 metric)", main="")
   })
 }
 
-# Run the application 
+#Run the application 
 shinyApp(ui = ui, server = server, options = list(height = 500))
 ```
 

@@ -5,7 +5,7 @@ account: skmckay
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 15720906
-bundleId: 11018182
+bundleId: 11019604
 url: https://skmckay.shinyapps.io/BRAT/
 version: 1
 asMultiple: FALSE
