@@ -11,9 +11,10 @@ runtime: shiny
 
 Points of Contact:
 
+S. Kyle McKay, Ph.D., P.E., Woolpert, Inc., New York, NY, kyle.mckay@woolpert.com
+
 Rosamar Ayala Torres, Environmental Laboratory, Vicksburg, MS, rosamar.ayala-torres@erdc.dren.mil
 
-S. Kyle McKay, Ph.D., P.E., Woolpert, Inc., New York, NY, kyle.mckay@woolpert.com
 
 ```{r, echo=FALSE, include=FALSE}
 #Markdown options
@@ -39,7 +40,7 @@ Insert later.
 
 Riparian zones are transitional ecosystems between aquatic freshwaters (e.g., streams, lakes, and wetlands) and terrestrial, upland areas. These ecosystems provide an enormous array of physical and ecological functions such as attenuation of floods, filtration of pollution and accompanying water quality improvement, regulation of stream temperatures, and provision of habitat for aquatic and terrestrial organisms. Accordingly, riparian zones are a major focus of ecosystem management (Johnson et al. 2018) and environmental regulation (Wenger et al. 1999). 
 
-Riparian zones have been extensively studied through a variety of disciplinary and interdisciplinary lenses (e.g., taxa-specific habitat investigations and management-focused management guidelines, respectively). Many models and tools have been developed to inform riparian management ranging from mechanistic vegetative growth tools to habitat suitability models to multi-metric scoring systems (Wiest et al. 2023, Dickard et al 2015). At the simplest level, riparian zone width has provided a useful proxy for estimating functional outcomes, and qualitative guidance has recommended specific width thresholds associated with specific ecological outcomes (Wenger et al. 1999, Fischer and Fischenich 2000a, Lind et al. 2019).
+Riparian zones have been extensively studied through a variety of disciplinary and interdisciplinary lenses (e.g., taxa-specific habitat investigations and management-focused management guidelines, respectively). Many tools have been developed to inform riparian management ranging from mechanistic vegetative growth models to habitat suitability indices to multi-metric scoring systems (Wiest et al. 2023, Dickard et al 2015). As a simple proxy, riparian zone width has provided a useful first order metric for estimating functional outcomes, and qualitative guidance has recommended specific width thresholds associated with specific ecological outcomes (Wenger et al. 1999, Fischer and Fischenich 2000a, Ellis 2008, Lind et al. 2019).
 
 This report documents development of a simple quantitative tool for assessing riparian zone quality based on rapidly applicable desktop analyses, the Buffer Relative Assessment Tool (BRAT). The model seeks to inform preliminary stream restoration planning when comparing the relative merits of multiple restoration sites (e.g., Site-A vs. Site-B) or divergent alternatives (e.g., large-scale levee setback vs. riparian planting of existing riparian areas). This report describes the goals of the model, the theory supporting model structure, numerical code executing the model, and model testing and evaluation. In doing so, this report provides documentation of the technical details, use, and relevant information for USACE model approval and certification, as presented in EC 1105-2-412 (USACE 2011).
 
@@ -66,7 +67,7 @@ rownames(Table01) <- NULL
 knitr::kable(Table01, caption="Table 1. A continuum of riparian modeling tools developed to inform USACE Planning decisions.", align="c") 
 ```
 
-The BRAT was developed primarily from the extensive body of peer-reviewed riparian studies and literature. In particular, large parts of the model were derived from a quantitative meta-analysis of riparian buffer performance (Ayala Torres et al. 2025), which were then augmented by other peer-reviewed resources (Fischer and Fischenich 2000b, Rhode et al. 2005). Although based in literature review, a common ecological modeling process of conceptualization, quantification, evaluation, application, and communication (Grant and Swannack 2008) guided development of BRAT and serves as the overarching structure for this report. 
+The BRAT was developed primarily from the extensive body of peer-reviewed riparian studies and scientific literature. In particular, large parts of the model were derived from a quantitative meta-analysis of riparian buffer performance (Ayala Torres et al. 2025), which were then augmented by other scientific studies (Fischer and Fischenich 2000b, Rhode et al. 2005, Ellis 2008). Although based in literature review, a common ecological modeling process of conceptualization, quantification, evaluation, application, and communication (Grant and Swannack 2008) guided development of BRAT and serves as the overarching structure for this report. 
 
 
 # **Conceptualization**
@@ -82,42 +83,56 @@ knitr::include_graphics("ZZ_BRAT_ConceptualModel.png")
 
 # **Quantification**
 
-Model quantification involves formalizing a conceptual model into a set of mathematical relationships, model parameters, and numerical algorithms (Grant and Swannack 2008). As mentioned, the BRAT model structure centers on three main ecological functions of riparian zones (instream processes, habitat provision, and corridor functions), which are derived from the REFI model structure (Wiest et al. 2026). Each of the three modules is assessed independently as a 0-to-1 index of ecosystem condition. Overall riparian condition is computed as the average of the quality scores for each module, which assumes that each function can occur without the others and mirrors the structure of REFI. Each module is viewed as an equally important contribution to overall stream function, and no weighting of outcomes is applied. Therefore, ecosystem quality is calculated as follows:
+Model quantification involves formalizing a conceptual model into a set of mathematical relationships, model parameters, and numerical algorithms (Grant and Swannack 2008). As mentioned, the BRAT quantifies three main ecological functions of riparian zones (instream processes, habitat provision, and corridor functions), which align with the REFI model structure (Wiest et al. 2026). Each of the three modules is assessed independently as a 0-to-1 index of ecosystem condition. Overall riparian condition is computed as the average of the quality scores for each module, which assumes that each function can occur without the others and mirrors the structure of REFI. Each module is viewed as an equally important contribution to overall stream function, and no weighting of outcomes is applied. Therefore, ecosystem quality is calculated as follows:
 
 $BRAT = \frac{I_{ins} + I_{hab} + I_{con}}{3}$
 
 Where $BRAT$ is an overarching index of riparian condition scaled from 0 to 1 and $I_{x}$ are indices of riparian condition relative to instream, habitat, and connectivity functions.
 
-The BRAT compiles existing metrics of riparian condition presented in peer-reviewed literature for each of these three functional categories. In particular, the instream and habitat functions are derived from equations presented in Ayala Torres et al. (2025), who conducted a global meta-analysis of riparian buffer performance relative to pollutant retention and biodiversity outcomes. The corridor functions are derived from Rhode et al. (2005) and **SMURF** as proxy metrics for the capacity of organisms to move through riparian areas. The following sections briefly describe each of these functions, the underlying studies supporting them, and the assumed functional form of these indices within BRAT. This section also describes the execution of the model in the R statistical software language (R Core Team 2022) in both a readily adaptable functional form as well as an interactive web application.
+The BRAT compiles existing metrics of riparian condition presented in scientific literature for each of these three functional categories. In particular, the instream and habitat functions are derived from equations presented in Ayala Torres et al. (2025), who conducted a global meta-analysis of riparian buffer performance relative to pollutant retention and biodiversity outcomes. The corridor functions are derived from studies of riparian zone fragmentation (Rhode et al. 2005) and widths limiting moving for multiple taxa (Ellis 2008). The following sections briefly describe each of these functions, the underlying studies supporting them, and the assumed functional form of these indices within BRAT. This section also describes model execution in the R statistical software language (R Core Team 2022) in both a readily adaptable functional form as well as an interactive web application.
 
 
 ```{r echo=FALSE, fig.height = 6, fig.width = 6, fig.cap="Figure 2. BRAT suitability index curves."}
 #Specify a set of input ranges to display suitability curves
-width.test <- c(0.1,seq(1,100,1))
+width.test <- c(0.1,seq(1,1000,1))
 
 #Empty list to store suitability curves
 BRAT.SI.plot <- list()
 
 #Specify instream curve
-BRAT.SI.plot[[1]] <- matrix(c(0,10,50,100, 0.0, 0.5, 0.8, 1.0), nrow=4, ncol=2)
+BRAT.SI.plot[[1]] <- matrix(c(0,3,30,100, 0.0, 0.55, 0.75, 1.0), nrow=4, ncol=2)
 
 #Specify habitats curve
-BRAT.SI.plot[[2]] <- matrix(c(0,10,50,100, 0.0, 0.3, 0.7, 0.9), nrow=4, ncol=2)
+BRAT.SI.plot[[2]] <- matrix(c(0,5,100,500, 0.0, 0.75, 0.85, 1.0), nrow=4, ncol=2)
 
 #Specify edge density curve from Rhode et al. (2005) in units of per m
-BRAT.SI.plot[[3]] <- matrix(c(0,0.085,0.15,0.65, 1.0, 1.0, 0.1, 0.1), nrow=4, ncol=2)
+BRAT.SI.plot[[3]] <- matrix(c(0,0.085,0.15,0.65, 1.0, 1.0, 1.0, 0.1, 0.1, 0.1), nrow=5, ncol=2)
 
 #Specify minimum width curve in meters
-BRAT.SI.plot[[4]] <- matrix(c(0,30, 300, 0.0, 1.0, 1.0), nrow=3, ncol=2)
+BRAT.SI.plot[[4]] <- matrix(c(0, 10, 50, 300, 0.0, 0.5, 1.0, 1.0), nrow=4, ncol=2)
 
-#Specify Ayala-Torres et al. (2025) pollutant regressions for 50th, 10th, and 90th percentiles
+#Specify Ayala-Torres et al. (2025) pollutant regressions for 50th
 BRAT.SI.plot[[5]] <- cbind(width.test, (44.706 + 8.194*log(width.test))/100)
 
-#Specify Ayala-Torres et al. (2025) biodiversity regressions for 50th, 10th, and 90th percentiles
-BRAT.SI.plot[[6]] <- cbind(width.test, (66.7 + 0.044*log(width.test))/100)
+#Specify Ayala-Torres et al. (2025) pollutant regressions for 10th
+BRAT.SI.plot[[6]] <- cbind(width.test, (-14.679 + 16.530*log(width.test))/100)
+
+#Specify Ayala-Torres et al. (2025) pollutant regressions for 90th
+BRAT.SI.plot[[7]] <- cbind(width.test, (89.666 + 2.524*log(width.test))/100)
+
+#Specify Ayala-Torres et al. (2025) biodiversity regressions for 50th
+BRAT.SI.plot[[8]] <- cbind(width.test, (67.049 + 3.850*log(width.test))/100)
+
+#Specify Ayala-Torres et al. (2025) biodiversity regressions for 10th
+BRAT.SI.plot[[9]] <- cbind(width.test, (44.543 + 2.822*log(width.test))/100)
+
+#Specify Ayala-Torres et al. (2025) biodiversity regressions for 90th
+BRAT.SI.plot[[10]] <- cbind(width.test, (99.810 + 0.040*log(width.test))/100)
 
 #Name the list items
-names(BRAT.SI.plot) <- c("Plot.ins", "Plot.hab", "Plot.edge", "Plot.min", "Ayala.pol", "Ayala.bio")
+names(BRAT.SI.plot) <- c("Plot.ins", "Plot.hab", "Plot.edge", "Plot.min", 
+                         "Ayala.pol.50", "Ayala.pol.10", "Ayala.pol.90",
+                         "Ayala.bio.50", "Ayala.bio.10", "Ayal.bio.90")
 
 ##########
 #Create multi-panel plot to display suitability curves
@@ -127,91 +142,100 @@ par(mgp=c(2.5,0.5,0), mar=c(6, 4, 1, 1), #these control margins
 
 #Plot INSTREAM suitability
 plot(c(0,100), c(0,1), type="n", xlim=c(0,100), ylim=c(0,1),
-     xlab="Average Buffer Width (m)", ylab="Instream Suitability", main="SI.ins")
-lines(BRAT.SI.plot[[5]][,1], BRAT.SI.plot[[5]][,2], lty=3, lwd=0.5) #Ayala regression
+     xlab="Average Buffer Width (m)", ylab="(A) Instream Suitability", main="SI.ins")
+lines(BRAT.SI.plot[[5]][,1], BRAT.SI.plot[[5]][,2], lty=3, lwd=0.5) #Ayala regression 50th
+lines(BRAT.SI.plot[[6]][,1], BRAT.SI.plot[[6]][,2], lty=3, lwd=0.5, col="red") #Ayala regression 10th
+lines(BRAT.SI.plot[[7]][,1], BRAT.SI.plot[[7]][,2], lty=3, lwd=0.5, col="red") #Ayala regression 90th
 lines(BRAT.SI.plot[[1]][,1], BRAT.SI.plot[[1]][,2], lwd=1) #Interpolation
 points(BRAT.SI.plot[[1]][,1], BRAT.SI.plot[[1]][,2], pch=19, lwd=2) #Breakpoints
+legend("bottomright", legend=c("BRAT","Ayala-Torres (mean)", "Ayala-Torres(10th/90th)"), lty=c(1,3,3), col=c("black", "black", "red"), cex=0.5)
 
 #Plot HABITAT suitability
-plot(c(0,100), c(0,1), type="n", xlim=c(0,100), ylim=c(0,1),
-     xlab="Average Buffer Width (m)", ylab="Habitat Suitability", main="SI.hab")
-lines(BRAT.SI.plot[[6]][,1], BRAT.SI.plot[[6]][,2], lty=3, lwd=0.5) #Ayala regression
+plot(c(0,500), c(0,1), type="n", xlim=c(0,500), ylim=c(0,1),
+     xlab="Average Buffer Width (m)", ylab="Habitat Suitability", main="(B) SI.hab")
+lines(BRAT.SI.plot[[8]][,1], BRAT.SI.plot[[8]][,2], lty=3, lwd=0.5) #Ayala regression 50th
+lines(BRAT.SI.plot[[9]][,1], BRAT.SI.plot[[9]][,2], lty=3, lwd=0.5, col="red") #Ayala regression 10th
+lines(BRAT.SI.plot[[10]][,1], BRAT.SI.plot[[10]][,2], lty=3, lwd=0.5, col="red") #Ayala regression 90th
 lines(BRAT.SI.plot[[2]][,1], BRAT.SI.plot[[2]][,2], lwd=1) #Interpolation
 points(BRAT.SI.plot[[2]][,1], BRAT.SI.plot[[2]][,2], pch=19, lwd=2) #Breakpoints
+legend("bottomright", legend=c("BRAT", "Ayala-Torres (mean)", "Ayala-Torres(10th/90th)"), lty=c(1,3,3), col=c("black", "black", "red"), cex=0.5)
 
 #Plot EDGE suitability
 plot(c(0,100), c(0,1), type="n", xlim=c(0,1), ylim=c(0,1),
-     xlab="Edge Density", ylab="Connectivity Suitability (edge)", main="SI.edge")
+     xlab="Edge Density (m/m2)", ylab="Connectivity Suitability (edge)", main="(C) SI.edge")
 lines(BRAT.SI.plot[[3]][,1], BRAT.SI.plot[[3]][,2], lwd=1) #Interpolation
 points(BRAT.SI.plot[[3]][,1], BRAT.SI.plot[[3]][,2], pch=19, lwd=2) #Breakpoints
 
 #Plot MINIMUM suitability
 plot(c(0,100), c(0,1), type="n", xlim=c(0,100), ylim=c(0,1),
-     xlab="Minimum Buffer Width (m)", ylab="Instream Suitability", main="SI.min")
+     xlab="Minimum Buffer Width (m)", ylab="Instream Suitability", main="(D) SI.min")
 lines(BRAT.SI.plot[[4]][,1], BRAT.SI.plot[[4]][,2], lwd=1) #Interpolation
 points(BRAT.SI.plot[[4]][,1], BRAT.SI.plot[[4]][,2], pch=19, lwd=2) #Breakpoints
 ```
 
 ## Instream Effects of Riparian Zones
 
-Insert general background.
+Riparian buffers are often justified based on their well-described benefits to instream processes such as water quality improvement, streambank stabilization, thermal and light regulation, and flood attenuation. Hundreds of studies have been conducted examining the mechanisms by which riparian properties like slope, width, soil properties, and vegetation type influence these functions (Wenger 1999, Fischer and Fischenich 2000). The number of individual studies has grown to sufficient size to examine trends across these studies using techniques like meta-analysis (Zhang et al. 2010, Lind et al. 2019). 
 
-Show suitability curves.
+Ayala-Torres et al. (2025) conducted a global meta-analysis of riparian buffer performance relative to pollutant retention processes as well as biodiversity outcomes. Over 350 studies met the criteria for inclusion in their analysis, but only 34 pollutant retention studies provided sufficient statistical summary data for use in a quantitative meta-regression. These studies addressed retention of nitrogen (n=34), phosphrous (n=24), and sediment (n=19) and included a width range of slope and vegetation conditions. Across these studies, riparian width was a strongly significant metric of pollutant uptake (p<0.0001). Meta-regression equations were provided by the authors based on expected value (i.e., regression to the mean) as well as prediction intervals (i.e., quantile regression).
 
-Paragraph justifying suitability curve 1. Present equation of the suitability curve.
+BRAT uses the meta-regression of Ayala-Torres et al. (2025) as the primary basis for assessing effects of riparian buffer width on instream processes. Their logarithmic regressions equations were reinterpretted in the common format of habitat suitability curves with break points and linear interpolation by using a standardized USACE ecological modeling tool (Carrillo et al. 2022). These linear regressions allowed for the models to be corrected at extreme boundaries (e.g., forcing suitability to 0 when width was 0) and allowed for the models to be presented relative to common thresholds used by riparian managers (e.g., 3, 30, and 100m). While the original analysis focused on water quality benefits (Ayala-Torres et al. 2025), BRAT assumes that these processes generally require greater width than other instream outcomes like streambank stabilization, an assumption upheld in other riparian syntheses (Fischer and Fischenich 2000).
 
-$I_{ins} = 44.706+8.194*ln(w_{avg})$
+Figure 1A shows these suitability curves graphically relative to the original logarithmic models of Ayala-Torres et al. (2025), and the instream suitability index may be calculated as: 
+
+$$I_{ins} = \begin{pmatrix} 0.00+0.183*w_{avg} & w_{avg}<3\\
+0.53+0.0074*w_{avg} & w_{avg}=3-30\\
+0.64+0.0036*w_{avg} & w_{avg}=30-100\\
+1.0 & w_{avg}>100
+\end{pmatrix}$$ 
+
+Where $w_{avg}$ is average riparian buffer width.
 
 
 ## Riparian Zones as Unique and Important Habitats
 
-Insert general background.
+Riparian areas also provide a unique set of habitats as ecotones between terrestrial and aquatic zones. These ecosystems frequently harbor a diverse set of taxa, and many scientific reviews have highlighted the riparian needs of individual taxa as well as guilds including multiple taxa (Fischer 2000, Ellis 2008). Ayala-Torres et al.'s (2025) meta-analysis also compiled 41 studies of riparian buffer width on biodiversity outcomes. The analysis included data from studies of vegetation (n=3), birds (n=7), fish (n=3), herpetofauna (n=3), mammals (n=6), and invertebrates (n=22). The response variable across diverse biogeographies was the relative richness of each taxa up to an expected regional maximum (i.e., a 0 to 1 metric comparable to pollutant retention). Meta-regression equations were provided by the authors based on expected value (i.e., regression to the mean) as well as prediction intervals (i.e., quantile regression).
 
-Show suitability curves.
+BRAT uses the meta-regression of Ayala-Torres et al. (2025) as the primary basis for assessing effects of riparian buffer width on habitat outcomes. Their logarithmic regressions equations were reinterpretted in the common format of habitat suitability curves with break points and linear interpolation by using a standardized USACE ecological modeling tool (Carrillo et al. 2022). These linear regressions allowed for the models to be corrected at extreme boundaries (e.g., forcing suitability to 0 when width was 0) and allowed for the models to be presented relative to common thresholds used by riparian managers (e.g., 5, 100, and 500m). Figure 1B shows these suitability curves graphically relative to the original logarithmic models of Ayala-Torres et al. (2025), and the habitat suitability index may be calculated as: 
 
-Paragraph justifying suitability curve 1. Present equation of the suitability curve.
-
-$I_{hab} = 0.667+20*ln(w_{avg})$
+$$I_{hab} = \begin{pmatrix} 0.00+0.15*w_{avg} & w_{avg}<5\\
+0.74+0.0011*w_{avg} & w_{avg}=5-100\\
+0.81+0.0004*w_{avg} & w_{avg}=100-500\\
+1.0 & w_{avg}>500
+\end{pmatrix}$$ 
 
 
 ## Riparian Zones as Corridors
 
-Insert general background.
+Riparian zones serve as movement corridors for a variety of taxa, and their role as corridors is distinct from effects on instream processes or as habitat. Said differently, Wenger (1999) states, “Because there is general agreement that riparian buffers offer important high-quality habitat, there is little need to debate their merits as movement corridors at this time.” The scientific literature is rich regarding the value of these corridors for maintaining population dynamics at watershed scales (Freeman et al. 2007), although a single proxy variable like buffer width has not be widely adopted. As such, BRAT quantifies the corridor value of riparian zones based on two simple proxies, edge density and minimum buffer width, which can both easily be calculated based on aerial imagery.
 
-Show suitability curves.
+Animal movement and behavior can be impacted by development outside of the riparian zone, and the relative amount of edge to interior habitat is a useful proxy for the level of buffer fragmentation. Edge density accounts for the relative proportion of edge length to interior habitat area. Rohde et al. (2005) report edge densities for regulated, restored, and “near-natural” rivers in Switzerland. We adopted this methodology and assume that the average edge density for their “near-natural” sites (~850 m/ha or 0.085 m/m^2^) is a lower limit for the best possible habitat quality, and that suitability declines linearly as edge density increases. We then use their maximum observed edge density (~1,500 m/ha or 0.15 m/m^2^) as an upper limit for the lowest habitat suitability. Because this metric is based on a single study of riparian habitat edge, we set the lower bound of suitability to 0.1 rather than 0.0. Figure 1C presents this suitability curve, and the following equation may be used to calculate suitability:
 
-Paragraph justifying suitability curve 1. Present equation of the suitability curve.  
-
-Animal movement and behavior can be impacted by development outside of the riparian zone. For instance, many bird species are sensitive to edge effect. Kelly (2018) found that both the overall Shannon Wiener Diversity Index for birds and percent presence of insectivores decreased in Kentucky wetlands as disturbance increased. By assessing the spatial structure of the edge of the riparian zone, bird species’ sensitivity to disturbance can be taken into account. Edge density accounts for the relative proportion of edge length to interior habitat area. Rohde et al. (2005) report edge densities for regulated, restored, and “near-natural” rivers in Switzerland. We adopted this methodology and assume that the average edge density for their “near-natural” sites (~850 m/ha or 0.026 ft/ft2) is a lower limit for the best possible habitat quality, and that suitability declines linearly as edge density increases. We then use their maximum observed edge density (~1,500 m/ha or 0.046 ft/ft2) as an upper limit for the lowest habitat suit-ability. 
-
-$$edge = \begin{pmatrix} 1.0 & \frac{L_{buffer}}{A_{edge}}<0.026\\
-2.3-50*\frac{L_{buffer}}{A_{edge}} & \frac{L_{buffer}}{A_{edge}}=0.026-0.046\\
-0.0 & \frac{L_{buffer}}{A_{edge}}>0.046
+$$x_{edge} = \begin{pmatrix} 1.0 & \frac{L_{buffer}}{A_{edge}}<0.085 m/m2\\
+2.18-13.85*\frac{L_{buffer}}{A_{edge}} & \frac{L_{buffer}}{A_{edge}}=0.085-0.15 m/m2\\
+0.1 & \frac{L_{buffer}}{A_{edge}}>0.15m/m2
 \end{pmatrix}$$ 
 
-Where $edge$ is a suitability index for the hydrologic and water quality benefits associated with a wide buffer strip, $A_{buffer}$ is the area of the riparian buffer in a reach as delineated in GIS (in ft^2^), and $L_{edge}$ is the exterior length of the polygon defining the area (in ft). 
+Where $x_{edge}$ is a suitability index for the degree of habitat fragmentation associated with riparian edge habitat, $A_{buffer}$ is the area of the riparian buffer in a reach as delineated in GIS (in m^2^), and $L_{edge}$ is the exterior length of the polygon defining the area (in m). 
 
-$x_{edge} = 1.0+10.0*ln(L_{edge})$
+As shown, a variety of corridor functions may be limited by the width of a riparian zone. Here, we use minimum width of a riparian zone as a proxy for how animal movement may be limited along a corridor. This metric assumes that the most narrow portion of a riparian area provides a "pinch point" for movement that could lead to higher rates of predation or increase encounter frequency with other taxa. Ellis (2008) compiled riparian width data for dozens of taxa, which we use to estimate corridor constriction effects. For small mammals, Ellis (2008) references a study showing no small mammal species reductions below 10m buffer width. We use this threshold as a proxy for effects on other taxa and assume a suitability of 0.5 associated with this value. Fischer (2000) identifies a number of bird species responding to thresholds in buffer width around 50m, which we use as an upper limit to this suitability metric (i.e., suitability = 1.0). Figure 1D shows this suitability metric graphically, and the following equation can be used to compute this metric:
 
-Paragraph justifying suitability curve 2. Present equation of the suitability curve. 
-Corridor functions may be limited by the width of a riparian zone. Here, average and minimum width of a riparian zone are used as proxies for how animal movement may be limited along a corridor. Reach-averaged buffer width provides a general metric, and suitability thresholds are set based on meta-analyses by Fischer and Fischenich (2000) and Wenger (1999), who identify 100 ft (~30m) and 300 ft (~100m) as common recommendations from other studies. Additionally, the most narrow riparian width of a given reach could pro-vide a “pinch point” for movement. Impacts are conceptualized as width decreases below 100 ft (~30m), which is a common threshold as described above.
-
-$$corridormin = \begin{pmatrix} 0.01*W_{bufmin} & W_{bufmin}=0-100\\
-1.0 & W_{bufmin}>=100
+$$x_{min} = \begin{pmatrix} 0.05*w_{min} & w_{min}<10\\
+0.38+0.0125*w_{min} & w_{min}=10-50m\\
+1.0 & w_{min}>500
 \end{pmatrix}$$ 
 
-Where $corridormin$ is a suitability index representing local confinement of the riparian zone relative to movement corridors and $W_{bufmin}$ is the minimum width of the riparian buffer in a sample reach as delineated in GIS (in ft). 
+Where $x_{min}$ is a suitability index representing local confinement of the riparian zone relative to movement corridors and $w_{min}$ is the minimum width of the riparian buffer in a sample reach as delineated from aerial imagery or other geospatial data (in m). 
 
-$x_{cor} = 1.0+10.0*ln(w_{min})$
-
-Paragraph justifying combination of edge and minimum corridor width
+The corridor metric for BRAT is simpler than the instream and habitat metrics, and this metric is based on significantly less empirical data (i.e., it was not developed from a global meta-analysis). These metrics are arithmatically averaged and not weighted to account for these assumptions. Thus, the overall corridor suitability may be calculated as:
 
 $I_{con} = \frac{x_{edge} + x_{cor}}{2}$
 
 
 ## Model Code
 
-Insert general background on R and functions. Compile REFI0 as a function using ecorest. 
+
+BRAT was programmed in the open-source, USACE-approved [R Statistical Software Language](https://cran.r-project.org) (R Core Team 2022). The 'ecorest' package was designed to execute habitat suitability models and provides a suite of functions for computing suitability indices based on user-specified data. Users may access BRAT through two forms of the model. First, the model was compiled as a single functional format shown below. The function has three input variables, average buffer width (in m), edge density (in m/m^2^), and minimum buffer width (in m). The output is a vector with each of the four suitability indices ($I_{ins}$, $I_{hab}$, $I_{con}$) as well as the overarching suitability index ($BRAT$). The model was also programmed as a web application using the shiny package, and the interactive application is fully integrated with this document and presented below.
 
 ```{r, echo=TRUE}
 #Specify function for the Buffer Relative Assessment Tool (BRAT)
@@ -223,19 +247,19 @@ BRAT <- function(width.avg.m, edge.density.perm, width.min.m){
   #Specify BRAT suitability curves
     BRAT.SI <- data.frame(matrix(NA, nrow=4,ncol=8))
     colnames(BRAT.SI) <- c("AvgBufferWidth1.m", "SI.ins", "AvgBufferWidth2.m", "SI.hab", "edge.perm", "SI.edge", "MinBufferWidth.m", "SI.cor")
-    BRAT.SI$AvgBufferWidth1.m <- c(0,10,50,100)
-    BRAT.SI$SI.ins <- c(0.0, 0.5, 0.8, 1.0)
-    BRAT.SI$AvgBufferWidth2.m <- c(0,10,50,100)
-    BRAT.SI$SI.hab <- c(0.0, 0.3, 0.7, 0.9)
+    BRAT.SI$AvgBufferWidth1.m <- c(0,3,30,100)
+    BRAT.SI$SI.ins <- c(0.0, 0.55, 0.75, 1.0)
+    BRAT.SI$AvgBufferWidth2.m <- c(0,5,100,500)
+    BRAT.SI$SI.hab <- c(0.0, 0.75, 0.85, 1.0)
     BRAT.SI$edge.perm <- c(0,0.085,0.15,0.65)
     BRAT.SI$SI.edge <- c(1.0, 1.0, 0.1, 0.1)
-    BRAT.SI$MinBufferWidth.m <- c(0,30, 300, NA)
-    BRAT.SI$SI.cor <- c(0.0, 1.0, 1.0, NA)
+    BRAT.SI$MinBufferWidth.m <- c(0,10, 50, 300)
+    BRAT.SI$SI.cor <- c(0.0, 0.5, 1.0, 1.0)
   
-  #Compute suitability relative to instream outcomes based on contaminant removal mean regression from Ayala et al. (2024)
+  #Compute suitability relative to linear approximation of pollutant removal regression from Ayala et al. (2025)
   Iins <- SIcalc(BRAT.SI[,1:2], width.avg.m)
 
-  #Compute suitability relative to habitat outcomes based on biodiversity mean regression from Ayala et al. (2024)
+  #Compute suitability relative to linear approximation of biodiversity regression from Ayala et al. (2025)
   Ihab <- SIcalc(BRAT.SI[,3:4], width.avg.m)
 
   #Compute suitability relative to edge effects based on Rohde et al. (2005)
@@ -253,13 +277,9 @@ BRAT <- function(width.avg.m, edge.density.perm, width.min.m){
 }
 
 #Test function
-BRAT(50,0.1,25)
+#BRAT(50,0.1,25)
 ```
 
-
-## Shiny App
-
-Insert embdded shiny app.
 
 ```{r echo=FALSE}
 #Define UI
@@ -294,7 +314,7 @@ server <- function(input, output) {
   output$barPlot <- renderPlot({
     barplot(result(), names.arg = c("Iins", "Ihab", "Icon", "BRAT"),
             col = "steelblue", ylim=c(0,1),
-            ylab = "Riparian Condition (0-1 metric)", main="")
+            ylab = "Riparian Condition (0-1 metric)", main=""); box()
   })
 }
 
@@ -312,25 +332,23 @@ Describe the basic battery of model evaluation relative to system quality, techn
 #Present model testing with different input vectors
 
 #Create data frame to store model testing
-test.matrix <- data.frame(matrix(NA, nrow=0, ncol=5))
-colnames(test.matrix) <- c("Component", "Avg Width (m)", "Min Width (m)", "Expected", "SRM Output")
+Table02 <- data.frame(matrix(NA, nrow=0, ncol=7))
+colnames(Table02) <- c("Component", "Avg Width (m)", "Edge Density (m/m2)", "Min Width (m)", "Expected", "Function", "Web App")
 
 #Specify test cases
-test.matrix[1,1:4] <- c("Iins", 0, 0, 0)
-test.matrix[2,1:4] <- c("Iins", 1000, 0, 1)
-test.matrix[3,1:4] <- c("Ihab", 0,1000,1)
-test.matrix[4,1:4] <- c("Iins", 0, 0, 0)
-test.matrix[5,1:4] <- c("Iins", 1000, 0, 1)
-test.matrix[6,1:4] <- c("Ihab", 0,1000,1)
-test.matrix[7,1:4] <- c("Iins", 0, 0, 0)
-test.matrix[8,1:4] <- c("Iins", 1000, 0, 1)
-test.matrix[9,1:4] <- c("Ihab", 0,1000,1)
+Table02[1,] <- c("Iins", 0, 0, 0, 0, 0, 0)
+Table02[2,] <- c("Iins", 1000, 0, 1, 0, 0, 0)
+Table02[3,] <- c("Ihab", 0,1000,1, 0, 0, 0)
+Table02[4,] <- c("Iins", 0, 0, 0, 0, 0, 0)
+Table02[5,] <- c("Iins", 1000, 0, 1, 0, 0, 0)
+Table02[6,] <- c("Ihab", 0,1000,1, 0, 0, 0)
+Table02[7,] <- c("Iins", 0, 0, 0, 0, 0, 0)
+Table02[8,] <- c("Iins", 1000, 0, 1, 0, 0, 0)
+Table02[9,] <- c("Ihab", 0,1000,1, 0, 0, 0)
 
-#Compute SRM output
-#test.matrix[1,5] <- SRM(test.matrix[1,1], test.matrix[1,2])$instream
-
-#Send table
-test.matrix
+#Send output table
+rownames(Table02) <- NULL
+knitr::kable(Table02, caption="Table 2. Test matrix for BRAT.", align="c") 
 ```
 
 
@@ -356,17 +374,21 @@ Carrillo C.C., McKay S.K., and Swannack T. 2020. Ecological model development: T
 
 Dickard, M., M. Gonzalez, W. Elmore, S. Leonard, D. Smith, S. Smith, J. Staats, P. Summers, D. Weixelman, S. Wyman. (2015). Riparian area management: Proper functioning condition assessment for lotic areas. Technical Reference 1737-15. U.S. Department of the Interior, Bureau of Land Management, National Opera-tions Center, Denver, CO.  
 
-Fischer R.A. and Fischenich J.C. 2000a. Design recommendations for riparian corridors and vegetated buffer strips. *ERDC TN-EMRRP-SR-24*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi. 
+Ellis, J.H. 2008. Scientific recommendations on the size of stream vegetated buffers needed to protect wildlife and wildlife habitat: Part Three - The need for stream vegetated buffers: What does the science say? Report to Montana Department of Environmental Quality, EPA/DEQ Wetland Development Grant. Montana Audubon, Helena, MT.
+
+Fischer R.A. 2000. Width of riparian zones for birds. *ERDC TN-EMRRP-SI-09*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi. 
+
+Fischer R.A. and Fischenich J.C. 2000. Design recommendations for riparian corridors and vegetated buffer strips. *ERDC TN-EMRRP-SR-24*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi. 
 
 Grant, W. E., and T. M. Swannack. 2008. Ecological Modeling: A Common-Sense Approach to Theory and Practice. Malden, MA: Blackwell Publishing.
-
-Gurevitch J., Koricheva J., Nakagawa S., and Stewart G. 2018. Meta-analysis and the science of research synthesis. *Nature*, 555(7695), 175–182. https://doi.org/10.1038/nature25753.
 
 Johnson R.R., Carothers S.W., Finch D.M., Kingsley K.J., and Stanley J.T. 2018. Riparian research and management: Past, present, future: Volume 1. *General Technical Report RMRS-GTR-377*. Rocky Mountain Research Station, Forest Service, US Department of Agriculture, Fort Collins, Colorado.
 
 Lind L., Hasselquist E.M., and Laudon H. 2019. Towards ecologically functional riparian zones: A meta-analysis to develop guidelines for protecting ecosystem functions and biodiversity in agricultural landscapes. *Journal of Environmental Management*, 249, https://doi.org/10.1016/j.jenvman.2019.109391. 
 
 McKay S.K., Richards N.S., and Swannack T.M. 2020. Ecological model evaluation: Testing system quality. *ERDC TN-EMRRP-EBA-26*. US Army Engineer Research and Development Center, Vicksburg, Mississippi. http://dx.doi.org/10.21079/11681/45380.
+
+McKay S.K., Hernandez-Abrams D.D., and Cushway K. 2025. Package ‘ecorest’. Version 2.0. Reference Manual. The Comprehensive R Archive Network.
 
 R Core Team. 2022. R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. https://www.R-project.org/.
 
