@@ -1,7 +1,7 @@
 --- 
 title: "Buffer Relative Assessment Tool (BRAT)"
 author: "S. Kyle McKay and Rosamar Ayala Torres"
-date: "October 2025"
+date: "December 2025"
 description: The U.S. Army Engineer Research and Development Center (ERDC) developed a simple model for assessing riparian ecosystems based on rapid desktop methods primarily related to buffer width. This report documents the development and use of this model.
 github-repo: skmckay/BRAT
 runtime: shiny
@@ -11,9 +11,9 @@ runtime: shiny
 
 Points of Contact:
 
-S. Kyle McKay, Ph.D., P.E., Woolpert, Inc., New York, NY, kyle.mckay@woolpert.com
+S. Kyle McKay, Ph.D., P.E., Woolpert, Inc., New York, NY, [kyle.mckay@woolpert.com](kyle.mckay@woolpert.com)
 
-Rosamar Ayala Torres, Environmental Laboratory, Vicksburg, MS, rosamar.ayala-torres@erdc.dren.mil
+Rosamar Ayala Torres, Environmental Laboratory, Vicksburg, MS, [rosamar.ayala-torres@erdc.dren.mil](rosamar.ayala-torres@erdc.dren.mil)
 
 
 ```{r, echo=FALSE, include=FALSE}
@@ -275,9 +275,6 @@ BRAT <- function(width.avg.m, edge.density.perm, width.min.m){
   BRAT.out <- c(Iins, Ihab, Icon, (Iins + Ihab + Icon)/3)
   BRAT.out
 }
-
-#Test function
-#BRAT(50,0.1,25)
 ```
 
 
@@ -325,10 +322,27 @@ shinyApp(ui = ui, server = server, options = list(height = 500))
 
 # **Evaluation**
 
-Describe the basic battery of model evaluation relative to system quality, technical quality, and usability.
 
+Model evaluation is the process for ensuring that numerical tools are scientifically defensible and transparently developed. Evaluation is often referred to as verification or validation, but it in fact includes a family of methods ranging from peer review to model testing to error checking (McKay et al. 2020). The USACE has established an ecological model certification process to ensure that planning models are sound and functional. These generally consist of evaluating tools relative to the three following categories: technical quality, system quality, and usability (EC 1105-2-412).
 
-```{r}
+The technical quality of a model is assessed relative to its reliance on contemporary theory, consistency with design objectives, and degree of verification and validation against independent field data. BRAT combines a variety of processes well-acknowledged as important to riparian ecosystem integrity. The instream and habitat modules are constructed based on a global meta-analysis of riparian buffer performance (Ayala-Torres et al. 2025). The corridor module relies on a smaller body of empirical information, but incorporates processes that are qualitatively important in many aspects of riparian function. While the corridor module has not been rigorously tested, the metrics included provide a useful mechanism for comparing the *relative* benefits of riparian actions at different sites (i.e., the goal of the BRAT). Future work should evaluate BRAT relative to independent data sources, although multi-metric evaluation is challenging for tools addressing broad notions of ecosystem integrity (Wiest et al. 2026b).
+
+System quality refers to the computational integrity of a tool and involves assessing the numerical accuracy of a model. System quality has three primary phases for avoiding errors (quality assurance), detecting errors through formal testing (quality control), and updating models based on review and use (model update) (McKay et al. 2020). Quality assurance of BRAT included practices such as use of a workflow contained wholly within one file (i.e., this integrated report, function, and user interface) and reuse of existing habitat suitability modeling tools (i.e., 'ecorest'). Quality control procedures were applied to find and correct any errors, including: line-level verification of code functionality, code review by both authors, and execution of a testing plan address major components of the function and web application (Table 2). Models were then reviewed by the USACE's Ecosystem Restoration Planning Center of Expertise (**PENDING**), and all code was archived using [a single github repository](https://github.com/skmckay/BRAT).
+
+```{r, echo=FALSE}
+#Test function
+#BRAT(0,0,0)
+#BRAT(3,0,0)
+#BRAT(30,0,0)
+#BRAT(100,0,0)
+#BRAT(5,0,0)
+#BRAT(500,0,0)
+#BRAT(500,0.085,0)
+#BRAT(500,0.15,0)
+#BRAT(500,0.65,0)
+#BRAT(500,0.085,10)
+#BRAT(500,0.085,50)
+
 #Present model testing with different input vectors
 
 #Create data frame to store model testing
@@ -336,49 +350,66 @@ Table02 <- data.frame(matrix(NA, nrow=0, ncol=7))
 colnames(Table02) <- c("Component", "Avg Width (m)", "Edge Density (m/m2)", "Min Width (m)", "Expected", "Function", "Web App")
 
 #Specify test cases
-Table02[1,] <- c("Iins", 0, 0, 0, 0, 0, 0)
-Table02[2,] <- c("Iins", 1000, 0, 1, 0, 0, 0)
-Table02[3,] <- c("Ihab", 0,1000,1, 0, 0, 0)
-Table02[4,] <- c("Iins", 0, 0, 0, 0, 0, 0)
-Table02[5,] <- c("Iins", 1000, 0, 1, 0, 0, 0)
-Table02[6,] <- c("Ihab", 0,1000,1, 0, 0, 0)
-Table02[7,] <- c("Iins", 0, 0, 0, 0, 0, 0)
-Table02[8,] <- c("Iins", 1000, 0, 1, 0, 0, 0)
-Table02[9,] <- c("Ihab", 0,1000,1, 0, 0, 0)
+Table02[1,] <- c("Iins", 0, 0, 0, 0.167, 0.167, 0.17)
+Table02[2,] <- c("Iins", 3, 0, 0, 0.500, 0.500, 0.50)
+Table02[3,] <- c("Iins", 30, 0, 0, 0.675, 0.675, 0.68)
+Table02[4,] <- c("Iins", 100, 0, 0, 0.783, 0.783, 0.78)
+Table02[5,] <- c("Ihab", 5, 0, 0, 0.605, 0.605, 0.60)
+Table02[6,] <- c("Ihab", 500, 0, 0, 0.833, 0.833, 0.83)
+Table02[7,] <- c("xedge", 500, 0.085, 0, 0.833, 0.833, 0.83)
+Table02[8,] <- c("xedge", 500, 0.15, 0, 0.683, 0.683, 0.68)
+Table02[9,] <- c("xedge", 500, 0.65, 0, 0.683, 0.683, 0.68)
+Table02[10,] <- c("xmin", 500, 0.085, 10, 0.917, 0.917, 0.92)
+Table02[11,] <- c("xmin", 500, 0.085, 50, 1.000, 1.000, 1.00)
 
 #Send output table
 rownames(Table02) <- NULL
-knitr::kable(Table02, caption="Table 2. Test matrix for BRAT.", align="c") 
+knitr::kable(Table02, caption="Table 2. Test matrix for BRAT. All outcomes were assessed for the overarching BRAT quality metric.", align="c") 
 ```
 
-
+The usability of a model can influence its repeatable and transparent application. This type of evaluation typically examines the ease of use, availability of inputs, transparency, error potential, and education of the user. BRAT was designed as a simple tool with very few inputs, all of which are easily extractable from commonly available aerial photos or geospatial data sets. Additionally, the model was programmed as both a function and a web application to maximize accessibility for diverse users.
 
 # **Application & Communication**
 
-Present a simple example of model application in a riparian zone. Maybe Beargrass Creek or Utoy Creek?
+The BRAT is intended to inform comparisons of divergent restoration alternatives at early stages of project planning. A simple hypothetical project provides a useful means of demonstrating this use case. In this example, a 1,000m reach of river has an existing riparian zone of 5m on average and 2m at its narrowest point. Assuming this 5m is somewhat evenly distributed the reach would have a total edge length of 2,010m and area of 5,000 m^2^ (i.e., edge density of 0.402 m/m^2^). Three restoration scenarios are developed to compare: (1) a small scale action targetting stream water quality benefits, (2) expansion of an ecological corridor, and (3) a large-scale levee setback and revegetation. Table 3 shows how BRAT can be applied to compare these simple scenarios and compute the ecological "lift" associated with restoration.
 
+```{r echo=FALSE}
+#Create empty table
+Table03 <- as.data.frame(matrix(NA, nrow = 4, ncol = 8))
+colnames(Table03) <- c("Alternative", "Width (avg,m)", "Width (min, m)", "Edge Density (m/m2)", "BRAT Quality", "Area (ac)", "Habitat Units", "Lift")
 
-Insert one paragraph summary.
+#Specify rows of the table
+Table03[1,] <- c("No Action", 5, 2, round((5+1000+5+1000)/(5*1000),2), 0.47, round((5*1000)*(3.281^2)/43560,2), 0.6, 0)
+Table03[2,] <- c("Stream Benefits", 10, 10, round((10+1000+10+1000)/(10*1000),2), 0.55, round((10*1000)*(3.281^2)/43560,2), 1.4, 0.8)
+Table03[3,] <- c("Ecological Corridor", 50, 50, round((50+1000+50+1000)/(50*1000),2), 0.87, round((50*1000)*(3.281^2)/43560,2), 10.8, 10.2)
+Table03[4,] <- c("Levee Setback", 300, 300, round((300+1000+300+1000)/(300*1000),2), 0.98, round((300*1000)*(3.281^2)/43560,2), 72.7, 72.1)
+
+#Send output table rows into a single matrix
+rownames(Table03) <- NULL
+knitr::kable(Table03, caption="Table 3. Example application of BRAT to a hypothetical riparian restoration project.", align="c") 
+```
 
 
 # **Acknowledgements** {-}
 
-Model development was funded by the U.S. Army Corps of Engineers' Ecosystem Management and Restoration Research Program ([EMRRP](https://emrrp.el.erdc.dren.mil/)). The authors are grateful to Garrett Menichino, Sam Wiest, and Colton Shaw for their broader contributions to an EMRRP study of riparian ecological modeling and their roles in assisting with the web application. This model was reviewed by Kip Runyon, Mick Porter, Aubrey Harris, and others. Opinions expressed here are those of the authors and not necessarily those of the agencies they represent.
+Model development was funded by the U.S. Army Corps of Engineers' Ecosystem Management and Restoration Research Program ([EMRRP](https://emrrp.el.erdc.dren.mil/)). The authors are grateful to Garrett Menichino, Sam Wiest, and Colton Shaw for their broader contributions to an EMRRP study of riparian ecological modeling and their roles in assisting with the web application. This model was reviewed by Garrett Menichino, Sam Wiest, and Mick Porter as part of USACE model certification (**PENDING**). Opinions expressed here are those of the authors and not necessarily those of the agencies they represent.
 
 
 # **References** {-}
 
 Ayala Torres R., Dietterich L.H., Wiest S., and McKay S.K.  2025. Developing predictive models of riparian buffer efficacy with meta-analysis.  *Environmental Challenges*, 20, 101258, https://doi.org/10.1016/j.envc.2025.101258. 
 
-Carrillo C.C., McKay S.K., and Swannack T. 2020. Ecological model development: Toolkit for interActive Modeling (TAM). ERDC TR-EMRRP. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.  
+Carrillo C.C., McKay S.K., and Swannack T. 2020. Ecological model development: Toolkit for interActive Modeling (TAM). *ERDC TR-EMRRP-SR-90*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.  
 
-Dickard, M., M. Gonzalez, W. Elmore, S. Leonard, D. Smith, S. Smith, J. Staats, P. Summers, D. Weixelman, S. Wyman. (2015). Riparian area management: Proper functioning condition assessment for lotic areas. Technical Reference 1737-15. U.S. Department of the Interior, Bureau of Land Management, National Opera-tions Center, Denver, CO.  
+Dickard, M., M. Gonzalez, W. Elmore, S. Leonard, D. Smith, S. Smith, J. Staats, P. Summers, D. Weixelman, S. Wyman. (2015). Riparian area management: Proper functioning condition assessment for lotic areas. *Technical Reference 1737-15*. U.S. Department of the Interior, Bureau of Land Management, National Opera-tions Center, Denver, CO.  
 
 Ellis, J.H. 2008. Scientific recommendations on the size of stream vegetated buffers needed to protect wildlife and wildlife habitat: Part Three - The need for stream vegetated buffers: What does the science say? Report to Montana Department of Environmental Quality, EPA/DEQ Wetland Development Grant. Montana Audubon, Helena, MT.
 
 Fischer R.A. 2000. Width of riparian zones for birds. *ERDC TN-EMRRP-SI-09*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi. 
 
 Fischer R.A. and Fischenich J.C. 2000. Design recommendations for riparian corridors and vegetated buffer strips. *ERDC TN-EMRRP-SR-24*. U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi. 
+
+Freeman, M.C., Pringle, C.M. and Jackson, C.R., 2007. Hydrologic connectivity and the contribution of stream headwaters to ecological integrity at regional scales. *Journal of the American Water Resources Association*, 43(1), pp.5-14.
 
 Grant, W. E., and T. M. Swannack. 2008. Ecological Modeling: A Common-Sense Approach to Theory and Practice. Malden, MA: Blackwell Publishing.
 
@@ -398,11 +429,15 @@ Shaw C. and Wiest S. 2023. Increasing Accessibility of Riparian Assessment Tools
 
 Shaw C., Wiest S., and McKay S.K. 2026. A web application for riparian models (WARM). *Forthcoming ERDC Technical Note*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
 
+U.S. Army Corps of Engineers (USACE). 2011. Assuring quality of planning models. *EC-1105-2-412*. Washington, DC. U.S. Army Corps of Engineers.
+
 Wenger S. 1999. A review of the scientific literature on riparian buffer width , extent and vegetation. Institute of Ecology, University of Georgia, https://www.soils.org/publications/sssaj/abstracts/73/6/2078.
 
 Wiest S., Hernandez-Abrams D., and McKay S.K. 2023. Review of riparian models for assessing ecological impacts and benefits. *ERDC/TN EMRRP-ER-26*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
 
 Wiest S., Menichino G.T., and McKay S.K. 2026. Riparian Ecological Functions Index (REFI). *Forthcoming ERDC Technical Report*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
+
+Wiest S., McFadden S., Hawkins J., and McKay S.K. 2026b. Evaluation of riparian ecological models with vegetation monitoring data. *Forthcoming ERDC Technical Note*, U.S. Army Engineer Research and Development Center, Vicksburg, Mississippi.
 
 Zhang X., Liu X., Zhang M., Dahlgren R.A., and Eitzel M. 2010. A review of vegetated buffers and a meta‐analysis of their mitigation efficacy in reducing nonpoint source pollution. *Journal of Environmental Quality*, 39 (1), 76–84, https://doi.org/10.2134/jeq2008.0496. 
 
